@@ -689,15 +689,13 @@ void MCU_Sleep_Wakeup_Operate( void )
     USBHSD->HOST_CTRL &= ~USBHS_UH_PHY_SUSPENDM;
     EXTI_ClearFlag( EXTI_Line12 | EXTI_Line13 | EXTI_Line14 | EXTI_Line15 );
     EXTI_ClearFlag( EXTI_Line4 | EXTI_Line5 | EXTI_Line6 | EXTI_Line7 );
-
-    _SEV( );
-    _WFE( );
     if( USBHSD->SUSPEND & USBHS_USB_WAKEUP_ST )
     {
         USBHSD->HOST_CTRL |= USBHS_UH_PHY_SUSPENDM;
         __enable_irq( );
         return;
     }
+    
     PWR_EnterSTOPMode(PWR_Regulator_LowPower,PWR_STOPEntry_WFE);
 
     SystemInit();

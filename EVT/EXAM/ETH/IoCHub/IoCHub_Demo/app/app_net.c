@@ -11,7 +11,6 @@
 #endif
 #include "app_net.h"
 #include "wchiochub.h"
-
 #define KEEPLIVE_ENABLE
 #define TCP_SINGLE_CLIENT
 
@@ -26,20 +25,6 @@ u8 socket[WCHNET_MAX_SOCKET_NUM];
 u8 SocketRecvBuf[WCHNET_MAX_SOCKET_NUM][RECE_BUF_LEN];
 u8 MyBuf[RECE_BUF_LEN];
 
-
-void TCP_Send (uint8_t socketid, uint8_t *buf, uint32_t len)
-{
-    uint32_t sendlen = len;
-    WCHNET_SocketSend (socketid, buf, &sendlen);
-}
-
-void UDP_Send (uint8_t socketid, uint8_t *buf, uint32_t slen, uint8_t *dstIP, uint16_t port)
-{
-    uint32_t sendlen = slen;
-    uint16_t dstport = port;
-    WCHNET_SocketUdpSendTo (socketid, buf, &sendlen, dstIP, dstport);
-}
-
 /*********************************************************************
  * @fn      mStopIfError
  *
@@ -50,9 +35,8 @@ void UDP_Send (uint8_t socketid, uint8_t *buf, uint32_t slen, uint8_t *dstIP, ui
 void mStopIfError (u8 iError)
 {
     if (iError == WCHNET_ERR_SUCCESS)
-
-
-    printf ("Error: %02X\r\n", (u16) iError); /*œ‘ æ¥ÌŒÛ */
+        return;
+    printf ("Error: %02X\r\n", (u16) iError);
 }
 
 /*******************************************************************************
@@ -112,7 +96,6 @@ void WCHNET_CreatUdpSocket (uint32_t srcport, uint8_t *SocketId)
     i = WCHNET_SocketCreat (SocketId, &TmpSocketInf);
     WCHNET_ModifyRecvBuf(*SocketId, (u32) SocketRecvBuf[*SocketId], RECE_BUF_LEN);
     mStopIfError (i);
-
 }
 
 /*********************************************************************
@@ -145,7 +128,6 @@ void WCHNET_HandleSockInt (u8 socketid, u8 initstat)
         	SocketIdForSer = socketid;
             socketIsSucc |= 0x01;
         }
-
         printf ("socketIsSucc: %d\r\n", socketIsSucc);
     }
 
@@ -214,7 +196,6 @@ void WCHNET_HandleGlobalInt (void)
  * Output         : None
  * Return         : result
  *******************************************************************************/
- extern void WCHIOCHUB_StartEn (void);
 uint8_t WCHNET_DHCPCallBack (uint8_t status, void *arg)
 {
     uint8_t *p;
@@ -237,7 +218,7 @@ uint8_t WCHNET_DHCPCallBack (uint8_t status, void *arg)
         WCHNET_DHCPStop ();
         WCHNET_SocketClose (0,0);
         memcpy (localIP, IPAddr, 4);
-        WCHIOCHUB_StartEn ();
+        dhcpflag = 2;
         return 0;
     }
     else
@@ -257,9 +238,36 @@ uint8_t WCHNET_DHCPCallBack (uint8_t status, void *arg)
 }
 
 /*********************************************************************
- * @fn      main
+ * @fn      TCP_Send
  *
- * @brief   Main program
+ * @brief   TCP Send
+ *
+ * @return  errcode
+ */
+uint8_t TCP_Send (uint8_t socketid, uint8_t *buf, uint32_t len) {
+    uint32_t sendlen = len;
+    uint8_t i = 0;
+    i = WCHNET_SocketSend (socketid, buf, &sendlen);
+    return i;
+}
+/*********************************************************************
+ * @fn      UDP_Send
+ *
+ * @brief   UDP Send
+ *
+ * @return  errcode
+ */
+uint8_t UDP_Send (uint8_t socketid, uint8_t *buf, uint32_t slen, uint8_t *dstIP, uint16_t port) {
+    uint32_t sendlen = slen;
+    uint16_t dstport = port;
+    uint8_t i = 0;
+    i = WCHNET_SocketUdpSendTo (socketid, buf, &sendlen, dstIP, dstport);
+    return i;
+}
+/*********************************************************************
+ * @fn      NET_Init
+ *
+ * @brief   NET_Init
  *
  * @return  none
  */

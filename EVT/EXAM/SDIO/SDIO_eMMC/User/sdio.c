@@ -1,8 +1,8 @@
 /********************************** (C) COPYRIGHT *******************************
 * File Name          : sdio.c
 * Author             : WCH
-* Version            : V1.0.1
-* Date               : 2025/01/09
+* Version            : V1.0.2
+* Date               : 2026/01/04
 * Description        : This file contains the headers of the SDIO.
 *********************************************************************************
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
@@ -105,6 +105,8 @@ SD_Error eMMC_Init( void )
     {
         errorstatus = eMMC_ReadExtCsd(&eMMCCardInfo);
     }
+   SystemInit();
+    delay_ms(5);
     if( ( errorstatus == SD_OK ) || ( SDIO_MULTIMEDIA_CARD == CardType ) )
     {
         if( eMMCCardInfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V1_1 || eMMCCardInfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V2_0 )

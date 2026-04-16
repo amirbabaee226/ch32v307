@@ -2,7 +2,7 @@
 * File Name          : main.c
 * Author             : WCH
 * Version            : V1.0.1
-* Date               : 2025/01/06
+* Date               : 2025/09/22
 * Description        : Main program body.
 *********************************************************************************
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
@@ -117,8 +117,9 @@ void TIM1_PWM_In(u16 arr, u16 psc, u16 ccp)
     TIM_SelectOutputTrigger(TIM2, TIM_TRGOSource_Update);
     TIM_Cmd(TIM2, ENABLE);
 }
+
 /*********************************************************************
- * @fn      Get_ConversionVal1
+ * @fn      Get_ConversionVal
  *
  * @brief   Get Conversion Value.
  *
@@ -128,7 +129,7 @@ void TIM1_PWM_In(u16 arr, u16 psc, u16 ccp)
  */
 u16 Get_ConversionVal(s16 val)
 {
-    if((val + Calibrattion_Val) < 0||val==0)
+    if((val + Calibrattion_Val) < 0 || val==0)
         return 0;
     if((Calibrattion_Val + val) > 4095 || val==4095)
         return 4095;
@@ -150,7 +151,7 @@ int main(void)
 
     ADC_Function_Init();
     printf("CalibrattionValue:%d\n", Calibrattion_Val);
-    TIM1_PWM_In(7200,1000-1,3600);
+    TIM1_PWM_In(7200-1,1000-1,3600);
 
     while(1);
 }
@@ -172,7 +173,6 @@ void ADC1_2_IRQHandler()
     {
         printf("ADC Extline trigger conversion...\r\n");
         ADC_val = ADC_GetInjectedConversionValue(ADC1, ADC_InjectedChannel_1);
-
         printf("JADC %04d\r\n", Get_ConversionVal(ADC_val));
     }
 

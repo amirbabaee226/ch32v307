@@ -320,7 +320,8 @@ uint32_t ETH_RegInit( ETH_InitTypeDef* ETH_InitStruct, uint16_t PHYAddress )
                   ETH_InitStruct->ETH_InterFrameGap |
                   ETH_InitStruct->ETH_ChecksumOffload |
                   ETH_InitStruct->ETH_AutomaticPadCRCStrip |
-                  ETH_InitStruct->ETH_LoopbackMode);
+                  ETH_InitStruct->ETH_LoopbackMode
+                  |(1 << 9));
 
     ETH->MACFFR = (uint32_t)(ETH_InitStruct->ETH_ReceiveAll |
                           ETH_InitStruct->ETH_SourceAddrFilter |

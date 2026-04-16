@@ -9,8 +9,6 @@
 * Attention: This software (modified or not) and binary are used for
 * microcontroller manufactured by Nanjing Qinheng Microelectronics.
 *******************************************************************************/
-
-#include <wchnet.h>
 #include "eth_driver.h"
 #include "ch32v30x_it.h"
 #include "app_iochub.h"
@@ -19,8 +17,8 @@ void NMI_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void HardFault_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void ETH_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void TIM2_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-void EXTI9_5_IRQHandler(void) __attribute__((interrupt()));
-
+void USART1_IRQHandler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
+extern void uart1_isr (void);
 /*********************************************************************
  * @fn      NMI_Handler
  *
@@ -50,19 +48,6 @@ void HardFault_Handler(void)
 }
 
 /*********************************************************************
- * @fn      EXTI9_5_IRQHandler
- *
- * @brief   This function handles GPIO exception.
- *
- * @return  none
- */
-void EXTI9_5_IRQHandler(void)
-{
-    // ETH_PHYLink( );
-    EXTI_ClearITPendingBit(EXTI_Line7);     /* Clear Flag */
-}
-
-/*********************************************************************
  * @fn      ETH_IRQHandler
  *
  * @brief   This function handles ETH exception.
@@ -81,22 +66,26 @@ void ETH_IRQHandler(void)
  *
  * @return  none
  */
- extern volatile uint8_t speedflg;
 void TIM2_IRQHandler(void)
 {
 	static uint8_t counter = 0;
-	static uint16_t speedcnt = 0;
-	if(counter>=10)
+	if(counter>=WCHNETTIMERPERIOD)
 	{
 		counter = 0;
 		WCHNET_TimeIsr(WCHNETTIMERPERIOD);
 	}
-    if (speedcnt > 1000) {
-        speedflg = 1;
-        speedcnt = 0;
-    }
-	speedcnt++;
 	counter++;
 	WCHIOCHUB_TimeIsr();
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+}
+
+/*********************************************************************
+ * @fn      USART1_IRQHandler
+ *
+ * @brief   This function handles USART1 exception.
+ *
+ * @return  none
+ */
+void USART1_IRQHandler (void) {
+    uart1_isr();
 }

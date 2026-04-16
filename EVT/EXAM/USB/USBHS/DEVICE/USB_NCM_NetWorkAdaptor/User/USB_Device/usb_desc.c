@@ -21,8 +21,8 @@ const uint8_t  MyDevDescr[ ] =
     0x00,
     0x02,                           /* bcdUSB USB2.0 */
     0x02,                           /* Miscellaneous Device Class */
-    0x02,                           /* Common Class */
-    0x0D,                           /* Interface Association Descriptor */
+    0x0D,                           /* Common Class */
+    0x00,                           /* Interface Association Descriptor */
     DEF_USBD_UEP0_SIZE,             /* Max packet 64 */
     ( DEF_USB_VID & 0xFF ),
     ( DEF_USB_VID >> 8 ),           /* VID */
@@ -45,7 +45,7 @@ const uint8_t  MyCfgDescr_HS[ ] =
     0x56,                           /* wTotalLength: Bytes returned */
     0x00,
     0x02,                           /* bNumInterfaces: 2 interface */
-    0x00,                           /* bConfigurationValue: Configuration value */
+    0x01,                           /* bConfigurationValue: Configuration value */
     0x00,                           /* iConfiguration: Index of string descriptor describing the configuration */
     DEF_USB_ATTRIBUTES,             /* bmAttributes: Bus powered */
     DEF_USB_MAXPOWER,               /* MaxPower 100 mA: this current is used for detecting Vbus */
@@ -154,7 +154,7 @@ const uint8_t  MyCfgDescr_FS[ ] =
     0x56,                           /* wTotalLength: Bytes returned */
     0x00,
     0x02,                           /* bNumInterfaces: 2 interface */
-    0x00,                           /* bConfigurationValue: Configuration value */
+    0x01,                           /* bConfigurationValue: Configuration value */
     0x00,                           /* iConfiguration: Index of string descriptor describing the configuration */
     DEF_USB_ATTRIBUTES,             /* bmAttributes: Bus powered */
     DEF_USB_MAXPOWER,               /* MaxPower 100 mA: this current is used for detecting Vbus */

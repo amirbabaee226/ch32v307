@@ -45,7 +45,7 @@ const uint8_t  MyCfgDescr_HS[ ] =
     0x50,                           /* wTotalLength: Bytes returned */
     0x00,
     0x02,                           /* bNumInterfaces: 2 interface */
-    0x00,                           /* bConfigurationValue: Configuration value */
+    0x01,                           /* bConfigurationValue: Configuration value */
     0x00,                           /* iConfiguration: Index of string descriptor describing the configuration */
     DEF_USB_ATTRIBUTES,             /* bmAttributes: Bus powered */
     DEF_USB_MAXPOWER,               /* MaxPower 100 mA: this current is used for detecting Vbus */
@@ -146,7 +146,7 @@ const uint8_t  MyCfgDescr_FS[ ] =
     0x50,                           /* wTotalLength: Bytes returned */
     0x00,
     0x02,                           /* bNumInterfaces: 2 interface */
-    0x00,                           /* bConfigurationValue: Configuration value */
+    0x01,                           /* bConfigurationValue: Configuration value */
     0x00,                           /* iConfiguration: Index of string descriptor describing the configuration */
     DEF_USB_ATTRIBUTES,             /* bmAttributes: Bus powered */
     DEF_USB_MAXPOWER,               /* MaxPower 100 mA: this current is used for detecting Vbus */

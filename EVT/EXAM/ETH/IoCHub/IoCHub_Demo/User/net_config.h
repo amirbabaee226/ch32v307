@@ -85,7 +85,7 @@ extern "C" {
 
 #define WCHNET_NUM_PBUF               WCHNET_NUM_POOL_BUF   /* Number of PBUF structures */
 
-#define WCHNET_NUM_TCP_SEG            (WCHNET_NUM_TCP*2)   /* The number of TCP segments used to send */
+#define WCHNET_NUM_TCP_SEG            (WCHNET_NUM_TCP*4)   /* The number of TCP segments used to send */
 
 #define WCHNET_MEM_HEAP_SIZE          (((WCHNET_TCP_MSS+0x10+54+8)*WCHNET_NUM_TCP_SEG)+ETH_TX_BUF_SZE+64+2*0x18) /* memory heap size */
 
