@@ -1,7 +1,7 @@
 /********************************** (C) COPYRIGHT *******************************
  * File Name          : wchiochub.h
  * Author             : WCH
- * Version            : V1.2.0
+ * Version            : V1.2.1
  * Date               : 2025/04/24
  * Description        : This file contains the headers of 
 *                    the IoCHub protocol stack library.
@@ -15,28 +15,18 @@
 #define __WCHIOCHUB_H_
 
 #include <stdint.h>
-#include "net_config.h"
-#if defined (CH32V30x_D8C) ||defined (CH32V30x_D8)
-#include "ch32v30x.h"
-#elif defined (CH32V20x_D8W) ||defined (CH32V20x_D8)||defined (CH32V20x_D6)
-#include "ch32v20x.h"
-#endif
 
-#define MAX_CONNECT_NUM							(7UL)    	/*The maximum number of supported connections is 7*/
-#define CONNECT_NUM								(2UL)    	/*The number of sessions configured by the user themselves*/
-#define	IOC_SESSION_HANDLE_TABLE_SIZE			(CONNECT_NUM*32UL)
-#define IOC_FRAME_SIZE							(WCHNET_TCP_MSS)//-20UL
-#define IOC_FRAME_NUM							(2*CONNECT_NUM+2)
-#define IOC_BUF_SIZE							(IOC_FRAME_SIZE*2)
+/* The following values are fixed and cannot be changed */
 
-#define IOC_RECV_BUF_SIZE						(IOC_BUF_SIZE*CONNECT_NUM)
-#define IOC_SEND_BUF_SIZE						(IOC_BUF_SIZE*CONNECT_NUM)
-
-#define IOC_MEMP_SIZE							(IOC_SESSION_HANDLE_TABLE_SIZE+IOC_RECV_BUF_SIZE+(IOC_FRAME_SIZE*IOC_FRAME_NUM))
+#define DEFAULT_MAX_CONNECT_NUM					(7UL)    	/*The maximum number of supported connections is 7*/
+#define IOCHUB_HDLSIZE							(44UL+12UL+20UL)
+#define IOCHUB_PKTLEN_NUM						(4UL)
+#define IOCHUB_FRAME_NUM						(2)
 
 #define LAN_SCAN_FUNC_ENABLE					1
-#define IOC_LAN_DEVICE_NUM						(3UL)
+
 /****************ErrorCode*******************/
+#define IOCHUB_ERR_T
 #define IOCHUB_SUCCESS                          0UL         /*The operation was successful*/
 #define IOCHUB_REGISTERING                      100UL       /*Registration for connection in progress*/
 #define IOCHUB_REGISTERED                       101UL       /*The equipment has been registered*/
@@ -48,7 +38,7 @@
 #define IOCHUB_GET_DEVICEID_FAIL                107UL       /*Failed to obtain the local identification*/
 #define IOCHUB_UPLOAD_NATTYPE_FAIL              108UL       /*Failed to report the NAT type*/
 #define IOCHUB_INPUT_IP_FORMAT_ERR              109UL       /*The input IP and port formats are incorrect*/
-#define IOCHUB_ACCESS_MODE_SET_FAIL             110UL       /*The device verification mode setting failed (the service has been started)*/
+#define IOCHUB_NODE_ID_OCCUPY                   110UL       /*Node ID occupied (in use)*/
 
 #define IOCHUB_DEVICE_UNREGISTER                200UL       /*The equipment is not registered*/
 #define IOCHUB_LAN_SCANNING                     201UL       /*Local area network discovery is underway*/
@@ -137,12 +127,11 @@ extern UDP_ADDR_S udpAddr;
 extern IoCHubHANDLE sessionHdl;
 
 
-typedef void(*TcpSendP)(uint8_t, uint8_t*, uint32_t);
-typedef void(*UdpSendP)(uint8_t, uint8_t*, uint32_t, uint8_t*, uint16_t);
+typedef uint8_t(*TcpSendP)(uint8_t, uint8_t*, uint32_t);
+typedef uint8_t(*UdpSendP)(uint8_t, uint8_t*, uint32_t, uint8_t*, uint16_t);
 typedef void(*TcpConnectP)(uint32_t, uint32_t, uint8_t*, uint8_t*);
 typedef void(*UdpConnectP)(uint32_t, uint8_t*);
 typedef uint8_t(*ConnectionCloseP )(uint8_t, uint8_t);
-typedef void (*IocHubDataRecvCallBackP)(uint8_t,uint8_t *, uint16_t);
 typedef void (*IocHubRegCallBackP)(uint16_t);
 typedef void (*IocHubSessionStateCallBackP)(uint8_t,uint16_t);
 #if LAN_SCAN_FUNC_ENABLE
@@ -159,37 +148,25 @@ typedef enum CHIP_TYPE
 	E_CH32V20x_D6
 }CHIP_TYPE;
 
-#ifdef CH32V30x_D8C
-#define CHIPTYPE 	E_CH32V30x_D8C
-#endif
-#ifdef CH32V30x_D8
-#define CHIPTYPE 	E_CH32V30x_D8
-#endif
-#ifdef CH32V20x_D8W
-#define CHIPTYPE 	E_CH32V20x_D8W
-#endif
-#ifdef CH32V20x_D8
-#define CHIPTYPE 	E_CH32V20x_D8
-#endif
-
 /* Parameter configuration structure */
 typedef struct TAG_IOCHUB_CONFIG
 {
-    uint16_t sendDataSize;
-    uint16_t ringBufLen;
-	uint8_t* iochubBuf;
-
+    uint16_t frameSize;
+    uint16_t poolBufSize;
+	uint8_t* IoCHubBuf;
     RTC_GetCycle pIoChubGetTimeIsr;
     TcpSendP pTcpSendF;
     UdpSendP pUdpSendF;
     TcpConnectP pTcpConnectF;
     UdpConnectP pUdpConnectF;
     ConnectionCloseP pConnectCloseF;
-    IocHubDataRecvCallBackP pDataRecvCB;
 	IocHubSessionStateCallBackP pSessionStateCB;
 	CHIP_TYPE chipType;
+    uint16_t wndSize;
+    uint16_t wndTimeOut;
+	uint16_t recvBufSize;
 	uint8_t maxConnNum;
-	uint8_t rfu[3];
+    uint8_t rfu; 
 } IOCHUB_CONFIG;
 
 /*******************************************************************************
@@ -230,6 +207,71 @@ void iochub_hex2Ascii(uint8_t *input, uint8_t inputLen, uint8_t *output);
  */
 void iochub_ascii2Hex(uint8_t *input, uint8_t inputLen, uint8_t *output);
 
+/*******************************************************************************
+ * @fn          iocos_memcpy
+ *
+ * @brief       Copies len bytes from memory area *scr to memory area *dst.
+ *
+ * input parameters
+ *
+ * @param       dst Pointer to the destination array to store the copied content, 
+ *					type-cast to a void* pointer.
+ *
+ * @param       scr Point to the data source to be copied, and the type is forcibly 
+ *					converted to a void* pointer.
+ *
+ * @param       len The number of bytes to be copied.
+ *
+ * output parameters
+ *
+ * @param       dst Return a pointer to the target storage area dst.
+ *
+ * @return      None
+ */
+void iocos_memcpy(void* dst ,const void* scr, uint32_t len);
+
+/*******************************************************************************
+ * @fn          iocos_memset
+ *
+ * @brief       Set a memory area to the specified value.
+ *
+ * input parameters
+ *
+ * @param       dst A pointer pointing to the memory area to be filled.
+ *
+ * @param       c The value to be set is usually an unsigned character.
+ *
+ * @param       len The number of bytes to be set to this value.
+ *
+ * output parameters
+ *
+ * @param       dst Return a pointer to the storage area str.
+ *
+ * @return      None
+ */
+void iocos_memset(void* dst , int8_t c, uint32_t len);
+
+/*******************************************************************************
+ * @fn          iocos_memcmp
+ *
+ * @brief       Compare the first len bytes of storage area str1 and storage area str2.
+ *
+ * input parameters
+ *
+ * @param       str1 A pointer to a memory block
+ *
+ * @param       str2 A pointer to a memory block
+ *
+ * @param       len The number of bytes to be compared.
+ *
+ * output parameters
+ *
+ * @param       None
+ *
+ * @return      0- str1 is equal to str2.
+ *				1- str1 is not equal to str2.
+ */
+int32_t iocos_memcmp(const void* str1 ,const void* str2, uint32_t len);
 /*******************************************************************************
  * @fn          WCHIOCHUB_Init
  *
@@ -365,7 +407,66 @@ uint16_t WCHIOCHUB_NetDataToUsrData(uint8_t *recvDataBuf, uint32_t recvDataSize)
  *
  * @return      Execution completion status
  */
-uint16_t WCHIOCHUB_DataSend(IoCHubHANDLE  pDev,uint8_t*  sendDataBuf, uint16_t sendDataSize);
+uint16_t WCHIOCHUB_DataSend(IoCHubHANDLE sessionHdl,uint8_t*  sendDataBuf, uint16_t* sendDataSize);
+
+/*******************************************************************************
+ * @fn          WCHIOCHUB_GetSessionSendableLen
+ *
+ * @brief       get the length of data that can be sent before the session sends it.
+ *
+ * input parameters
+ *
+ * @param  pDev 	- Specifies the session handle
+ *
+ * @param  sendLen 	- pointer to the length to be sent
+ *
+ * output parameters
+ *
+ * @param  sendLen 	- pointer to the length to be sent
+ *
+ * @return      @IOCHUB_ERR_T
+ */
+uint16_t WCHIOCHUB_GetSessionSendableLen (IoCHubHANDLE sessionHdl, uint16_t* sendLen);
+
+/*******************************************************************************
+ * @fn          WCHIOCHUB_DataRecv
+ *
+ * @brief       Client receives data to read
+ *
+ * input parameters
+ *
+ * @param  *recvDataBuf - the first address of receive buffer
+ *
+ * @param  *recvDataSize - pointer to the length of the data expected to be read
+ *
+ * output parameters
+ *
+ * @param  *recvDataBuf - the first address of data buffer
+ *
+ * @param  *recvDataSize - pointer to the length of the data read actually
+ *
+ * @return @IOCHUB_ERR_T
+ */
+uint16_t WCHIOCHUB_DataRecv (IoCHubHANDLE sessionHdl, uint8_t *recvDataBuf, uint16_t *recvDataSize);
+
+/*******************************************************************************
+ * @fn          WCHIOCHUB_GetSessionRecvLen
+ *
+ * @brief       get the length of data that can be read before the session reads it.
+ *
+ * input parameters
+ *
+ * @param  pDev 	- Specifies the session handle
+ *
+ * @param  recvLen 	- pointer to the length to be read
+ *
+ * output parameters
+ *
+ * @param  recvLen 	- pointer to the length to be read
+ *
+ * @return      @IOCHUB_ERR_T
+ */
+uint16_t WCHIOCHUB_GetSessionRecvLen (IoCHubHANDLE sessionHdl, uint16_t *recvLen);
 
 /*******************************************************************************
  * @fn          WCHIOCHUB_GetSDKVer
@@ -383,7 +484,7 @@ uint16_t WCHIOCHUB_DataSend(IoCHubHANDLE  pDev,uint8_t*  sendDataBuf, uint16_t s
  * @return      None
  *
  */
-void WCHIOCHUB_GetSDKVer(uint8_t verBuf[4]);
+void WCHIOCHUB_GetSDKVer(uint8_t verBuf[3]);
 
 /*******************************************************************************
  * @fn          WCHIOCHUB_GetLocalID
@@ -441,7 +542,7 @@ uint8_t WCHIOCHUB_GetNATType(void);
  *				0xff: session is invalid;
  *
  */
-uint8_t WCHIOCHUB_GetTransferType(IoCHubHANDLE  pDev);
+uint16_t WCHIOCHUB_GetTransferType(IoCHubHANDLE sessionHdl);
 
 /*******************************************************************************
  * @fn          WCHIOCHUB_GetDeviceSerState
@@ -530,7 +631,7 @@ void WCHIOCHUB_GetAccessMode(uint8_t* modeType, uint8_t sessionKey[8]);
  * @return      0-The session connection was initiated successfully.
  *				Error code - Failed to initiate a session connection.
  */
-uint16_t WCHIOCHUB_OpenSession(IoCHubHANDLE* pDev, uint8_t dstDevcID[8], uint8_t sessionKey[8]);
+uint16_t WCHIOCHUB_OpenSession(IoCHubHANDLE* sessionHdl, uint8_t dstDevcID[8], uint8_t sessionKey[8]);
 
 /*******************************************************************************
  * @fn          WCHIOCHUB_CloseSession
@@ -547,7 +648,7 @@ uint16_t WCHIOCHUB_OpenSession(IoCHubHANDLE* pDev, uint8_t dstDevcID[8], uint8_t
  *
  * @return      None.
  */
-uint16_t WCHIOCHUB_CloseSession(uint8_t sessionHdl);
+uint16_t WCHIOCHUB_CloseSession(IoCHubHANDLE sessionHdl);
 
 
 /*******************************************************************************
@@ -613,6 +714,46 @@ uint16_t WCHIOCHUB_SetBrdcstAddr(uint8_t* addr);
  */
  void WCHIOCHUB_LanScan(uint8_t scanTime);
 #endif
+
+/*******************************************************************************
+ * @fn          WCHIOCHUB_GetNodeID
+ *
+ * @brief      Get the device ID of the peer node in the session
+ *
+ * input parameters
+ *
+ * @param       iochubSessionHdl session handle
+ *
+ * @param       nodeID[8] Array holding the device ids of the peer nodes
+ *
+ * output parameters
+ *
+ * @param       nodeID[8] Device id of the peer node
+ *
+ * @return      None
+ *
+ */
+void WCHIOCHUB_GetNodeID (IoCHubHANDLE SessionHdl, uint8_t nodeID[8]);
+
+/*******************************************************************************
+ * @fn          WCHIOCHUB_GetNodeIP
+ *
+ * @brief      Get the device IP of the peer node in the session
+ *
+ * input parameters
+ *
+ * @param       iochubSessionHdl session handle
+ *
+ * @param       nodeIP[8] Array holding the device IP DAAR of the peer nodes
+ *
+ * output parameters
+ *
+ * @param       nodeIP[8] Device IP ADDR of the peer node
+ *
+ * @return      None
+ *
+ */
+void WCHIOCHUB_GetNodeIP (IoCHubHANDLE SessionHdl, uint8_t nodeIP[4]);
 
 /* The main task function of the library needs to be continuously called in the main while loop */
 void WCHIOCHUB_Process( void );

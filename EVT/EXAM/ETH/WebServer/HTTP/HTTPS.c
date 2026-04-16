@@ -41,9 +41,9 @@ u8 Port_Default[PORT_CFG_LEN] = {
 0x57, 0xAB,
 MODE_TCPCLIENT, 1000 / 256, 1000 % 256, 192, 168, 1, 100, 1000 / 256, 1000 % 256 };
 
-u8 *name;                                               //The name of the web page requested by HTTP
+char *name;                                             //The name of the web page requested by HTTP
 u8 socket;                                              //socket id
-u8 httpweb[200];                                        //The array is used to store the HTTP response message
+char httpweb[200];                                        //The array is used to store the HTTP response message
 char HtmlBuffer[HTML_LEN];                              //Web page send buffer
 
 extern u8 HTTPDataBuffer[RECE_BUF_LEN];//MAC address IP address Gateway IP address subnet mask
@@ -521,7 +521,7 @@ const char Html_about[] = {
     "</div>\r\n"
     "<br>\r\n"
     "<div class=\"lab_4 STYLE4\"><span class=\"STYLE2\">Download</span><br />\r\n"
-    "<p class=\"STYLE4\">Chip data:<a href=\"http://www.wch.cn/search?q=%E4%BB%A5%E5%A4%AA%E7%BD%91&t=all\" target=\"_blank\">Chip Profile with Ethernet</a></p>\r\n"
+    "<p class=\"STYLE4\">Chip data:<a href=\"https://www.wch.cn/products/productsCenter/mcuInterface?categoryId=4\" target=\"_blank\">Chip Profile with Ethernet</a></p>\r\n"
     "</div>\r\n"
     "<br>\r\n"
     "<div class=\"lab_4 STYLE4\"><span class=\"STYLE2\">Contact us</span><br />\r\n"
@@ -2276,7 +2276,7 @@ void ParseHttpRequest(st_http_request *request, char *buf)
  */
 void ParseURLType(char *type, char * buf)
 {
-    if (strstr(buf, ".html") || strstr(name, "HTTP")) /* html type */
+    if (strstr(buf, ".html") || strstr((char *)name, "HTTP")) /* html type */
         *type = PTYPE_HTML;
     else if (strstr(buf, ".png"))                    /* png type */
         *type = PTYPE_PNG;
@@ -2300,12 +2300,12 @@ void ParseURLType(char *type, char * buf)
  *
  * @return  none
  */
-void MakeHttpResponse(u8 *buf, char type, u32 len )
+void MakeHttpResponse(char *buf, char type, u32 len )
 {
     char *head = 0;
     char string[8] = {0};
 
-    memset(buf, 0, sizeof(buf));
+    memset(buf, 0, sizeof(httpweb));
     if (type == PTYPE_HTML)
         head = RES_HTMLHEAD_OK;
     else if (type == PTYPE_PNG)
@@ -2314,10 +2314,10 @@ void MakeHttpResponse(u8 *buf, char type, u32 len )
         head = RES_CSSHEAD_OK;
     else if (type == PTYPE_GIF)
         head = RES_GIFHEAD_OK;
-    strcpy(buf, head);
+    strcpy((char *)buf, head);
     snprintf(string, sizeof(string), "%d", len);
-    strcat(buf, string);
-    strcat(buf, RES_END);
+    strcat((char *)buf, string);
+    strcat((char *)buf, RES_END);
 }
 
 /*********************************************************************
@@ -2348,7 +2348,7 @@ char * DataLocate(char *buf, char *name)
  *
  * @return  hexadecimal number
  */
-uint8_t atoh(uint8_t *src)
+uint8_t atoh(char *src)
 {
     uint8_t desc=0;
 
@@ -2372,7 +2372,7 @@ uint8_t atoh(uint8_t *src)
  *
  * @return  none
  */
-void Refresh_Basic(u8 *buf)
+void Refresh_Basic(char *buf)
 {
     char *p, *q;
     char temp[30];                               //Save the value of each configuration in the form of a string
@@ -2553,7 +2553,7 @@ void Refresh_Port(char *buf)
  *
  * @return  status
  */
-uint8_t ASCToDec(uint8_t *ASCPtr)
+uint8_t ASCToDec(char *ASCPtr)
 {
     uint8_t i;
     for(i = 0; i < 2; i++)
@@ -2627,7 +2627,7 @@ void Refresh_Login(char *buf)
 {
     char *p, *q = NULL;
     u8 len;
-    uint8_t tempbuff[30] = {0x00};
+    char tempbuff[30] = {0x00};
     Login_Cfg_t LoginInf;
 
 
@@ -2811,7 +2811,7 @@ void WEB_READ(u32 StartAddr, u8 *Buffer, u32 Length) {
  */
 void Init_Para_Tab(void)
 {
-    u8 s[30];
+    char s[30];
 
     Para_Basic[0].para = "__AMAC";
     memset(s, 0, 30);
@@ -2952,12 +2952,12 @@ void Web_Server(void)
     u32 resplen = 0;
     u32 pagelen = 0;
 
-    reqnum = strFind(HTTPDataBuffer,"GET") + strFind(HTTPDataBuffer,"get") + \
-             strFind(HTTPDataBuffer,"POST") + strFind(HTTPDataBuffer,"post");
+    reqnum = strFind((char *)HTTPDataBuffer,"GET") + strFind((char *)HTTPDataBuffer,"get") + \
+             strFind((char *)HTTPDataBuffer,"POST") + strFind((char *)HTTPDataBuffer,"post");
 
     while(reqnum){
         reqnum--;
-        ParseHttpRequest(&http_request, HTTPDataBuffer);
+        ParseHttpRequest(&http_request, (char *)HTTPDataBuffer);
         switch (http_request.METHOD)
         {
             case METHOD_ERR:
@@ -2991,9 +2991,9 @@ void Web_Server(void)
                 /*Analyze the requested resource type and return the response*/
                 MakeHttpResponse(httpweb, http_request.TYPE, pagelen);
                 resplen = strlen(httpweb);
-                Data_Send(socket, httpweb, resplen);
+                Data_Send(socket, (uint8_t *)httpweb, resplen);
 
-                Data_Send(socket, HtmlBuffer, pagelen);
+                Data_Send(socket, (uint8_t *)HtmlBuffer, pagelen);
                 /*After the request is processed, the current
                  * socket connection is closed, and a new connection
                  * will be established when the browser sends the next
@@ -3055,9 +3055,9 @@ void Web_Server(void)
                 }
                 /*Analyze the requested resource type and return the response*/
                 MakeHttpResponse(httpweb, http_request.TYPE, pagelen);
-                resplen = strlen(httpweb);
-                Data_Send(socket, httpweb, resplen);
-                Data_Send(socket, HtmlBuffer, pagelen);
+                resplen = strlen((char *)httpweb);
+                Data_Send(socket, (uint8_t *)httpweb, resplen);
+                Data_Send(socket, (uint8_t *)HtmlBuffer, pagelen);
                 break;
 
             default:

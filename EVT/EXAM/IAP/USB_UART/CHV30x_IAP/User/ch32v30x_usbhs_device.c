@@ -54,7 +54,7 @@ u8 EP1_Rx_Cnt, EP2_Rx_Cnt;
 /* USB device descriptor */
 UINT8 MyDevDescr[18] = { 0x12, 0x01, 0x10, 0x01, 0xFF, 0x80, 0x55, 0x40, 0x48,
         0x43, 0xe0, 0x55,  //USB MODULE
-        (u8) Version_Num, (u8) (Version_Num >> 8), //°æ±¾ºÅ V0100
+        (u8) Version_Num, (u8) (Version_Num >> 8), 
         0x00, 0x00, 0x00, 0x01 };
 
 /* USB configuration descriptor (full speed) */

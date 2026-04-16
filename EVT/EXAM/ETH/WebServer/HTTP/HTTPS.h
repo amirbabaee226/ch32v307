@@ -83,13 +83,13 @@ typedef struct Port_Cfg                          //Port configuration parameters
 
 typedef struct Login_Cfg                         //Login configuration parameters
 {
-    u8  flag[2];                                //Configuration information verification code: 0x57,0xab
-    u8  user[11];
-    u8  pass[11];
+    u8  flag[2];                                 //Configuration information verification code: 0x57,0xab
+    char  user[11];
+    char  pass[11];
 } Login_Cfg_t;
 
 
-typedef struct _st_http_request                 //Browser request information
+typedef struct _st_http_request                  //Browser request information
 {
 	char	METHOD;					
 	char	TYPE;					
@@ -116,7 +116,7 @@ extern u8 Login_Default[LOGIN_CFG_LEN];
 
 extern u8 Port_Default[PORT_CFG_LEN];
 
-extern u8 httpweb[200] ;
+extern char httpweb[200] ;
 
 extern u8 HTTPDataBuffer[];
 
@@ -126,7 +126,7 @@ extern void ParseHttpRequest(st_http_request *, char *);
 
 extern void ParseURLType(char *, char *);
 
-void MakeHttpResponse(u8 *buf, char type, u32 len );
+void MakeHttpResponse(char *buf, char type, u32 len );
 
 extern char *GetURLName(char* url);
 

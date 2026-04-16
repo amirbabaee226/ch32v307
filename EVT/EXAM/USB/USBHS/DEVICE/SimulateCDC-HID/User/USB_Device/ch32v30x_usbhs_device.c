@@ -97,13 +97,14 @@ void USB_TestMode_Deal( void )
     {
         /* Test_SE0_NAK */
         USBHSD->SUSPEND &= ~TEST_MASK;
+        USBHSD->SUSPEND |= TEST_PACKET;
         USBHSD->DEV_AD = 0x00;
         USBHSD->UEP0_RX_CTRL = USBHS_UEP_R_RES_NAK;
         USBHSD->UEP0_TX_CTRL = USBHS_UEP_T_RES_NAK;
     }
     else if( USBHS_SetupReqIndex == 0x0400 )
     {
-        /* Test_Packet */
+        /* Test_Packet */ 
         USBHSD->SUSPEND &= ~TEST_MASK;
         USBHSD->SUSPEND |= TEST_PACKET;
 

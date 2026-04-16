@@ -470,7 +470,7 @@ int main(void)
     i = ETH_LibInit(IPAddr,GWIPAddr,IPMask,MACAddr);     //Ethernet library initialize
     mStopIfError(i);
     if(i == WCHNET_ERR_SUCCESS) PRINT("WCHNET_LibInit Success\r\n");
-	WCHNET_CreateTcpSocket(&SocketRecvBuf[0]);            //Create  UDP Socket
+	WCHNET_CreateTcpSocket(&SocketRecvBuf[0]);            //Create  TCP Socket
 
 	while(1)
 	{

@@ -20,7 +20,7 @@ u8 ICMPCnt = 0;
 u8 ICMPSeq = 0;
 u8 ICMPSuc = 0;
 u8 ICMPTmpVal = 0;
-u32 timeCnt;
+volatile u32 timeCnt;
 extern u8 SocketId;
 /*********************************************************************
  * @fn      InitParameter

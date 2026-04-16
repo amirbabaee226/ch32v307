@@ -1,26 +1,22 @@
 /********************************** (C) COPYRIGHT *******************************
-* File Name          : main.c
-* Author             : WCH
-* Version            : V1.0.0
-* Date               : 2025/04/06
-* Description        : Main program body.
-*********************************************************************************
-* Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
-* Attention: This software (modified or not) and binary are used for
-* microcontroller manufactured by Nanjing Qinheng Microelectronics.
-*******************************************************************************/
+ * File Name          : main.c
+ * Author             : WCH
+ * Version            : V1.0.0
+ * Date               : 2025/04/06
+ * Description        : Main program body.
+ *********************************************************************************
+ * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Attention: This software (modified or not) and binary are used for
+ * microcontroller manufactured by Nanjing Qinheng Microelectronics.
+ *******************************************************************************/
 
 #include "string.h"
 #include "debug.h"
-#include "WCHNET.h"
+#include "wchnet.h"
 #include "eth_driver.h"
-#include "app_iochub.h"
 #include "app_net.h"
+#include "app_iochub.h"
 
-
-extern volatile uint8_t speedflg;
-extern volatile uint32_t speed;
-extern volatile uint32_t recvcnt;
 /*********************************************************************
  * @fn      TIM2_Init
  *
@@ -28,10 +24,9 @@ extern volatile uint32_t recvcnt;
  *
  * @return  none
  */
-void TIM2_Init (void)
-{
+void TIM2_Init (void) {
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure =
-    { 0 };
+        {0};
 
     RCC_APB1PeriphClockCmd (RCC_APB1Periph_TIM2, ENABLE);
 
@@ -100,15 +95,22 @@ int main (void) {
     NVIC_PriorityGroupConfig (NVIC_PriorityGroup_2);
     Delay_Init();
     USART_Printf_Init (115200);
-    printf ("IoCHub Test\r\n");
+    printf ("IoCHub Demo\r\n");
     printf ("SystemClk:%d\r\n", SystemCoreClock);
     TIM2_Init();
     NET_Init();
     IoCHub_Init();
+    WCHIOCHUB_DataLoopbackInit();
     AT_Init();
-    while (1) {
+    while(1)
+    {
         NET_Process();
         WCHIOCHUB_Process();
         AT_Process();
+        WCHIOCHUB_DataLoopback();
+        if (2 == dhcpflag) {
+            dhcpflag = 0;
+            WCHIOCHUB_StartEn();
+        }
     }
 }
